@@ -13,31 +13,61 @@
 # limitations under the License.
 
 import logging
+from io import StringIO
 from mkdocs import plugins
+from mkdocs.structure.files import File
 import yaml
 import pandas
 from fnmatch import fnmatch
 import glob
 import os
+import re
 
-log = logging.getLogger('mkdocs')
+log = logging.getLogger(f'mkdocs.plugins.{__name__}')
+
+
+def process_feature_name(feature):
+    """
+    Process feature names by splitting camelCase into space-separated words
+    """
+    # Split camelCase
+    words = re.findall(r'HTTPRoute|[A-Z]+(?=[A-Z][a-z])|[A-Z][a-z]+|[A-Z\d]+', feature)
+    # Join words with spaces
+    return ' '.join(words)
 
 
 @plugins.event_priority(100)
-def on_pre_build(config, **kwargs):
+def on_files(files, config, **kwargs):
     log.info("generating conformance")
 
     vers = getConformancePaths()
+    # Iterate over the list of versions. Exclude the pre 1.0 versions.
     for v in vers[3:]:
 
         confYamls = getYaml(v)
         releaseVersion = v.split(os.sep)[-2]
-        generate_conformance_tables(confYamls, releaseVersion)
+        file = generate_conformance_tables(confYamls, releaseVersion, config)
+
+        if file:
+          existing_file = files.get_file_from_path(file.src_uri)
+          if existing_file:
+              # Remove the existing file that is likely present in the
+              # repository
+              files.remove(existing_file)
+
+          # Add the generated file to the site
+          files.append(file)
+
+          # Write the generated file to the site-src directory
+          with open(os.path.join("site-src", file.src_uri), "w") as f:
+            f.write(file.content_string)
+
+    return files
 
 
 desc = """
 The following tables are populated from the conformance reports [uploaded by project implementations](https://github.com/kubernetes-sigs/gateway-api/tree/main/conformance/reports). They are separated into the extended features that each project supports listed in their reports.
-Implementations only appear in this page if they pass Core conformance for the resource type, and the features listed should be Extended features.
+Implementations only appear in this page if they pass Core conformance for the resource type, and the features listed should be Extended features. Implementations that submit conformance reports with skipped tests won't appear in the tables.
 """
 
 warning_text = """
@@ -51,7 +81,10 @@ warning_text = """
 
 
 
-def generate_conformance_tables(reports, currVersion):
+def generate_conformance_tables(reports, currVersion, mkdocsConfig):
+
+    # Enable Pandas copy-on-write
+    pandas.options.mode.copy_on_write = True
 
     gateway_tls_table = pandas.DataFrame()
     gateway_grpc_table = pandas.DataFrame()
@@ -74,8 +107,13 @@ def generate_conformance_tables(reports, currVersion):
     mesh_http_table = mesh_http_table.rename_axis('Organization')
 
     versionFile = ".".join(currVersion.split(".")[:2])
+    entries =  gateway_http_table.nunique()
 
-    with open('site-src/implementations/'+versionFile+'.md', 'w') as f:
+    if entries.Project < 3:
+        return
+
+    try:
+        f = StringIO()
 
         f.write(desc)
         f.write("\n\n")
@@ -86,7 +124,7 @@ def generate_conformance_tables(reports, currVersion):
         f.write("## Gateway Profile\n\n")
         f.write("### HTTPRoute\n\n")
         f.write(gateway_http_table.to_markdown()+'\n\n')
-        if currVersion != 'v1.0.0': 
+        if currVersion != 'v1.0.0':
             f.write('### GRPCRoute\n\n')
             f.write(gateway_grpc_table.to_markdown()+'\n\n')
             f.write('### TLSRoute\n\n')
@@ -96,6 +134,20 @@ def generate_conformance_tables(reports, currVersion):
         f.write("### HTTPRoute\n\n")
         f.write(mesh_http_table.to_markdown())
 
+        file_contents = f.getvalue()
+    finally:
+        f.close()
+
+    new_file = File(
+      src_dir=None,
+      dest_dir=mkdocsConfig['site_dir'],
+      path=f'implementations/{versionFile}.md',
+      use_directory_urls=mkdocsConfig['use_directory_urls'],
+    )
+    new_file.content_string = file_contents
+    new_file.generated_by = f'{__name__}'
+
+    return new_file
 
 def generate_profiles_report(reports, route,version):
 
@@ -110,11 +162,13 @@ def generate_profiles_report(reports, route,version):
                                'version','mode', 'extended.supportedFeatures']].T
     http_table.columns = http_table.iloc[0]
     http_table = http_table[1:].T
-    
+
     for row in http_table.itertuples():
         if type(row._4) is list:
             for feat in row._4:
-                http_table.loc[row.Index, feat] = ':white_check_mark:'
+                # Process feature name before using it as a column
+                processed_feat = process_feature_name(feat)
+                http_table.loc[row.Index, processed_feat] = ':white_check_mark:'
     http_table = http_table.fillna(':x:')
     http_table = http_table.drop(['extended.supportedFeatures'], axis=1)
 
@@ -126,8 +180,8 @@ def generate_profiles_report(reports, route,version):
 
 
 pathTemp = "conformance/reports/*/"
-allVersions = []
-reportedImplementationsPath = []
+allVersions = set()
+reportedImplementationsPath = set()
 
 # returns v1.0.0 and greater, since that's when reports started being generated in the comparison table
 
@@ -137,9 +191,10 @@ def getConformancePaths():
     report_path = versions[-1]+"**"
     for v in versions:
         vers = v.split(os.sep)[-2]
-        allVersions.append(vers)
-        reportedImplementationsPath.append(v+"**")
-    return reportedImplementationsPath
+        allVersions.add(vers)
+        reportedImplementationsPath.add(v+"**")
+
+    return sorted(list(reportedImplementationsPath))
 
 
 def getYaml(conf_path):
@@ -150,11 +205,12 @@ def getYaml(conf_path):
         if fnmatch(p, "*.yaml"):
 
             x = load_yaml(p)
-            profiles = pandas.json_normalize(
-                x, record_path=['profiles'], meta=["mode","implementation"], errors='ignore')
+            if 'profiles' in x:
+              profiles = pandas.json_normalize(
+                  x, record_path=['profiles'], meta=["mode","implementation"], errors='ignore')
 
-            implementation = pandas.json_normalize(profiles.implementation)
-            yamls.append(pandas.concat([implementation, profiles], axis=1))
+              implementation = pandas.json_normalize(profiles.implementation)
+              yamls.append(pandas.concat([implementation, profiles], axis=1))
 
     yamls = pandas.concat(yamls)
     return yamls

@@ -40,9 +40,6 @@ type ParentReference = v1.ParentReference
 type CommonRouteSpec = v1.CommonRouteSpec
 
 // PortNumber defines a network port.
-//
-// +kubebuilder:validation:Minimum=1
-// +kubebuilder:validation:Maximum=65535
 type PortNumber = v1.PortNumber
 
 // BackendRef defines how a Route should forward a request to a Kubernetes
@@ -313,7 +310,7 @@ type GatewayController = v1.GatewayController
 // Invalid values include:
 //
 // * example~ - "~" is an invalid character
-// * example.com. - can not start or end with "."
+// * example.com. - cannot start or end with "."
 //
 // +kubebuilder:validation:MinLength=1
 // +kubebuilder:validation:MaxLength=253
@@ -360,7 +357,7 @@ const (
 	// (see [RFC 5952](https://tools.ietf.org/html/rfc5952)).
 	//
 	// This type is intended for specific addresses. Address ranges are not
-	// supported (e.g. you can not use a CIDR range like 127.0.0.0/24 as an
+	// supported (e.g. you cannot use a CIDR range like 127.0.0.0/24 as an
 	// IPAddress).
 	//
 	// Support: Extended

@@ -54,6 +54,10 @@ ROOT := $(abspath $(TOP))
 CONFORMANCE_FLAGS ?=
 GO_TEST_FLAGS ?=
 
+# Flags for CRD validation tests
+CEL_TEST_K8S_VERSION ?= 
+CEL_TEST_CRD_CHANNEL ?= standard
+
 all: generate vet fmt verify test
 
 # Run generators for protos, Deepcopy funcs, CRDs, and docs.
@@ -85,23 +89,24 @@ test:
 # Run tests for CRDs validation
 .PHONY: test.crds-validation
 test.crds-validation:
-	./hack/test-crds-validation.sh $(VERSION)
+	K8S_VERSION=$(CEL_TEST_K8S_VERSION) CRD_CHANNEL=$(CEL_TEST_CRD_CHANNEL) go test ${GO_TEST_FLAGS} -count=1 -timeout=120s --tags=$(CEL_TEST_CRD_CHANNEL) -v ./pkg/test/cel
+	K8S_VERSION=$(CEL_TEST_K8S_VERSION) CRD_CHANNEL=$(CEL_TEST_CRD_CHANNEL) go test ${GO_TEST_FLAGS} -count=1 -timeout=120s -v ./pkg/test/crd
 
 # Run conformance tests against controller implementation
 .PHONY: conformance
 conformance:
 	go test ${GO_TEST_FLAGS} -v ./conformance -run TestConformance -args ${CONFORMANCE_FLAGS}
-	
-# Install CRD's and example resources to a pre-existing cluster.
+
+# Install CRD's and example resources to a preexisting cluster.
 .PHONY: install
 install: crd example
 
-# Install the CRD's to a pre-existing cluster.
+# Install the CRD's to a preexisting cluster.
 .PHONY: crd
 crd:
 	kubectl kustomize config/crd | kubectl apply -f -
 
-# Install the example resources to a pre-existing cluster.
+# Install the example resources to a preexisting cluster.
 .PHONY: example
 example:
 	hack/install-examples.sh
@@ -159,14 +164,33 @@ image.multiarch.setup: image.buildx.verify
 release-staging: image.multiarch.setup
 	hack/build-and-push.sh
 
-# Generate a virtualenv install, which is useful for hacking on the
-# docs since it installs mkdocs and all the right dependencies.
-#
-# On Ubuntu, this requires the python3-venv package.
-virtualenv: .venv
-.venv: requirements.txt
-	@echo Creating a virtualenv in $@"... "
-	@python3 -m venv $@ || (rm -rf $@ && exit 1)
-	@echo Installing packages in $@"... "
-	@$@/bin/python3 -m pip install -q -r requirements.txt || (rm -rf $@ && exit 1)
-	@echo To enter the virtualenv type \"source $@/bin/activate\",  to exit type \"deactivate\"
+# Docs
+
+.PHONY: build-docs
+build-docs:
+	docker build --pull -t gaie/mkdocs hack/mkdocs/image
+	docker run --rm -v ${PWD}:/docs gaie/mkdocs build
+
+.PHONY: build-docs-netlify
+build-docs-netlify:
+	hack/mkdocs/generate.sh
+	pip install -r hack/mkdocs/image/requirements.txt
+	python -m mkdocs build
+
+.PHONY: live-docs
+live-docs:
+	docker build -t gw/mkdocs hack/mkdocs/image
+	docker run --rm -it -p 3000:3000 -v ${PWD}:/docs gw/mkdocs
+
+.PHONY: api-ref-docs
+api-ref-docs:
+	crd-ref-docs \
+		--source-path=${PWD}/apis \
+		--config=crd-ref-docs.yaml \
+		--renderer=markdown \
+		--output-path=${PWD}/site-src/reference/spec.md
+	crd-ref-docs \
+		--source-path=${PWD}/apisx \
+		--config=crd-ref-docs.yaml \
+		--renderer=markdown \
+		--output-path=${PWD}/site-src/reference/specx.md

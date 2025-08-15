@@ -1,7 +1,7 @@
 ---
 description: >
   We are excited to announce the v0.8.0 release of Gateway API, where service
-  mesh support has has now reached Experimental status, we've introduced CEL
+  mesh support has now reached Experimental status, we've introduced CEL
   validation and a Mesh conformance profile, and more!
 ---
 
@@ -185,25 +185,25 @@ Although these are [Experimental][status] patterns, note that they are
 available in the [`standard` release channel][ch], since the GAMMA initiative
 has not needed to introduce new resources or fields to date.
 
-[gamma]:/concepts/gamma/
-[status]:/geps/overview/#status
-[ch]:/concepts/versioning/#release-channels-eg-experimental-standard
+[gamma]:../../mesh/index.md
+[status]:../../geps/overview.md#gep-states
+[ch]:../../concepts/versioning.md#release-channels
 [cel]:https://kubernetes.io/docs/reference/using-api/cel/
 [crd]:https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/
-[concepts]:/concepts/api-overview/
-[geps]:/contributing/enhancement-requests/
-[guides]:/guides/getting-started/
-[impl]:/implementations/
-[install-crds]:/guides/getting-started/#install-the-crds
+[concepts]:../../concepts/api-overview.md
+[geps]:../../contributing/enhancement-requests.md
+[guides]:../../guides/index.md
+[impl]:../../implementations.md
+[install-crds]:../../guides/index.md#installing-gateway-api
 [issue]:https://github.com/kubernetes-sigs/gateway-api/issues/new/choose
 [disc]:https://github.com/kubernetes-sigs/gateway-api/discussions
-[community]:/contributing/community/
-[mesh-routing]:/concepts/gamma/#how-the-gateway-api-works-for-service-mesh
-[GEP-1426]:/geps/gep-1426/
-[GEP-1324]:/geps/gep-1324/
-[GEP-1686]:/geps/gep-1686/
-[GEP-1709]:/geps/gep-1709/
+[community]:../../contributing/index.md
+[mesh-routing]:../../mesh/index.md
+[GEP-1426]:../../geps/gep-1294/index.md
+[GEP-1324]:../../geps/gep-1324/index.md
+[GEP-1686]:../../geps/gep-1686/index.md
+[GEP-1709]:../../geps/gep-1709/index.md
 [issue 2277]:https://github.com/kubernetes-sigs/gateway-api/issues/2277
-[supported-versions]:/concepts/versioning/#supported-versions
+[supported-versions]:../../concepts/versioning.md#supported-versions
 [v0.8.0 release notes]:https://github.com/kubernetes-sigs/gateway-api/releases/tag/v0.8.0
-[versioning docs]:/concepts/versioning/
+[versioning docs]:../../concepts/versioning.md

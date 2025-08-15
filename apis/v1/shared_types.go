@@ -86,6 +86,7 @@ type ParentReference struct {
 	// Name is the name of the referent.
 	//
 	// Support: Core
+	// +required
 	Name ObjectName `json:"name"`
 
 	// SectionName is the name of a section within the target resource. In the
@@ -148,6 +149,9 @@ type ParentReference struct {
 	// Support: Extended
 	//
 	// +optional
+	//
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=65535
 	Port *PortNumber `json:"port,omitempty"`
 }
 
@@ -218,6 +222,7 @@ type CommonRouteSpec struct {
 	// </gateway:experimental:description>
 	//
 	// +optional
+	// +listType=atomic
 	// +kubebuilder:validation:MaxItems=32
 	// <gateway:standard:validation:XValidation:message="sectionName must be specified when parentRefs includes 2 or more references to the same parent",rule="self.all(p1, self.all(p2, p1.group == p2.group && p1.kind == p2.kind && p1.name == p2.name && (((!has(p1.__namespace__) || p1.__namespace__ == '') && (!has(p2.__namespace__) || p2.__namespace__ == '')) || (has(p1.__namespace__) && has(p2.__namespace__) && p1.__namespace__ == p2.__namespace__ )) ? ((!has(p1.sectionName) || p1.sectionName == '') == (!has(p2.sectionName) || p2.sectionName == '')) : true))">
 	// <gateway:standard:validation:XValidation:message="sectionName must be unique when parentRefs includes 2 or more references to the same parent",rule="self.all(p1, self.exists_one(p2, p1.group == p2.group && p1.kind == p2.kind && p1.name == p2.name && (((!has(p1.__namespace__) || p1.__namespace__ == '') && (!has(p2.__namespace__) || p2.__namespace__ == '')) || (has(p1.__namespace__) && has(p2.__namespace__) && p1.__namespace__ == p2.__namespace__ )) && (((!has(p1.sectionName) || p1.sectionName == '') && (!has(p2.sectionName) || p2.sectionName == '')) || (has(p1.sectionName) && has(p2.sectionName) && p1.sectionName == p2.sectionName))))">
@@ -227,9 +232,6 @@ type CommonRouteSpec struct {
 }
 
 // PortNumber defines a network port.
-//
-// +kubebuilder:validation:Minimum=1
-// +kubebuilder:validation:Maximum=65535
 type PortNumber int32
 
 // BackendRef defines how a Route should forward a request to a Kubernetes
@@ -436,6 +438,7 @@ const (
 type RouteParentStatus struct {
 	// ParentRef corresponds with a ParentRef in the spec that this
 	// RouteParentStatus struct describes the status of.
+	// +required
 	ParentRef ParentReference `json:"parentRef"`
 
 	// ControllerName is a domain/path string that indicates the name of the
@@ -451,6 +454,7 @@ type RouteParentStatus struct {
 	// Controllers MUST populate this field when writing status. Controllers should ensure that
 	// entries to status populated with their ControllerName are cleaned up when they are no
 	// longer necessary.
+	// +required
 	ControllerName GatewayController `json:"controllerName"`
 
 	// Conditions describes the status of the route with respect to the Gateway.
@@ -469,7 +473,7 @@ type RouteParentStatus struct {
 	// There are a number of cases where the "Accepted" condition may not be set
 	// due to lack of controller visibility, that includes when:
 	//
-	// * The Route refers to a non-existent parent.
+	// * The Route refers to a nonexistent parent.
 	// * The Route is of a type that the controller does not support.
 	// * The Route is in a namespace the controller does not have access to.
 	//
@@ -477,6 +481,7 @@ type RouteParentStatus struct {
 	// +listMapKey=type
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=8
+	// +required
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
@@ -498,6 +503,8 @@ type RouteStatus struct {
 	// A maximum of 32 Gateways will be represented in this list. An empty list
 	// means the route has not been attached to any Gateway.
 	//
+	// +required
+	// +listType=atomic
 	// +kubebuilder:validation:MaxItems=32
 	Parents []RouteParentStatus `json:"parents"`
 }
@@ -675,7 +682,7 @@ type GatewayController string
 // Invalid values include:
 //
 // * example~ - "~" is an invalid character
-// * example.com. - can not start or end with "."
+// * example.com. - cannot start or end with "."
 //
 // +kubebuilder:validation:MinLength=1
 // +kubebuilder:validation:MaxLength=253
@@ -705,7 +712,7 @@ type AnnotationValue string
 // Invalid values include:
 //
 // * example~ - "~" is an invalid character
-// * example.com. - can not start or end with "."
+// * example.com. - cannot start or end with "."
 //
 // +kubebuilder:validation:MinLength=1
 // +kubebuilder:validation:MaxLength=253
@@ -771,7 +778,7 @@ const (
 	// (see [RFC 5952](https://tools.ietf.org/html/rfc5952)).
 	//
 	// This type is intended for specific addresses. Address ranges are not
-	// supported (e.g. you can not use a CIDR range like 127.0.0.0/24 as an
+	// supported (e.g. you cannot use a CIDR range like 127.0.0.0/24 as an
 	// IPAddress).
 	//
 	// Support: Extended
@@ -882,6 +889,8 @@ type CookieConfig struct {
 	// absolute lifetime of the cookie tracked by the gateway and
 	// is optional.
 	//
+	// Defaults to "Session".
+	//
 	// Support: Core for "Session" type
 	//
 	// Support: Extended for "Permanent" type
@@ -911,6 +920,7 @@ const (
 // +kubebuilder:validation:XValidation:message="numerator must be less than or equal to denominator",rule="self.numerator <= self.denominator"
 type Fraction struct {
 	// +kubebuilder:validation:Minimum=0
+	// +required
 	Numerator int32 `json:"numerator"`
 
 	// +optional

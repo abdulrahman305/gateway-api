@@ -49,10 +49,12 @@ import (
 //
 // GatewayClass is a Cluster level resource.
 type GatewayClass struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec defines the desired state of GatewayClass.
+	// +required
 	Spec GatewayClassSpec `json:"spec"`
 
 	// Status defines the current state of GatewayClass.
@@ -61,6 +63,7 @@ type GatewayClass struct {
 	// specify their controller name.
 	//
 	// +kubebuilder:default={conditions: {{type: "Accepted", status: "Unknown", message: "Waiting for controller", reason: "Pending", lastTransitionTime: "1970-01-01T00:00:00Z"}}}
+	// +optional
 	Status GatewayClassStatus `json:"status,omitempty"`
 }
 
@@ -83,6 +86,7 @@ type GatewayClassSpec struct {
 	// Support: Core
 	//
 	// +kubebuilder:validation:XValidation:message="Value is immutable",rule="self == oldSelf"
+	// +required
 	ControllerName GatewayController `json:"controllerName"`
 
 	// ParametersRef is a reference to a resource that contains the configuration
@@ -118,15 +122,18 @@ type GatewayClassSpec struct {
 // configuration resource within the cluster.
 type ParametersReference struct {
 	// Group is the group of the referent.
+	// +required
 	Group Group `json:"group"`
 
 	// Kind is kind of the referent.
+	// +required
 	Kind Kind `json:"kind"`
 
 	// Name is the name of the referent.
 	//
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=253
+	// +required
 	Name string `json:"name"`
 
 	// Namespace is the namespace of the referent.
@@ -180,9 +187,12 @@ const (
 	GatewayClassReasonAccepted GatewayClassConditionReason = "Accepted"
 
 	// This reason is used with the "Accepted" condition when the GatewayClass
-	// was not accepted because the parametersRef field refers to a nonexistent
-	// or unsupported resource or kind, or when the data within that resource is
-	// malformed.
+	// was not accepted because the parametersRef field refers to
+	// * a namespaced resource but the Namespace field is not set, or
+	// * a cluster-scoped resource but the Namespace field is set, or
+	// * a nonexistent object, or
+	// * an unsupported resource or kind, or
+	// * an existing resource but the data within that resource is malformed.
 	GatewayClassReasonInvalidParameters GatewayClassConditionReason = "InvalidParameters"
 
 	// This reason is used with the "Accepted" condition when the
@@ -284,5 +294,6 @@ type GatewayClassList struct {
 type FeatureName string
 
 type SupportedFeature struct {
+	// +required
 	Name FeatureName `json:"name"`
 }

@@ -69,7 +69,7 @@ steps:
 
 1. select a [profile](#profiles)
 2. [integrate](#integration) tests in the downstream project
-3. [report results and get certified](#certification)
+3. [report results][#reporting-process] and get certified][#certification-process]
 
 The goal is to make selecting a conformance profile as simple and automatic of a
 process as feasible and support both the existing command line integration
@@ -164,7 +164,7 @@ for i := 0; i < len(tests.ConformanceTests); i++ {
 > but when used in conjunction with `Profile` this will result in a report that
 > the profile is not valid for reporting. Implementations in this state may be
 > able to report themselves as "in progress", see the
-> [certification section](#certification) for details.
+> [certification section](#certification-process) for details.
 
 Alternatively for an `Extended` conformance profile where not all of the
 features are implemented (as described in the [profiles](#profiles) section
@@ -234,7 +234,7 @@ support, or opt-out of the features you _don't_ support using
 `UnsupportedFeatures`.
 
 Once an implementation has integrated with the conformance test suite, they can
-move on to [certification](#certification) to report the results.
+move on to [certification](#certification-process) to report the results.
 
 [go-test]:https://go.dev/doc/tutorial/add-a-test
 [go]:https://go.dev
@@ -358,7 +358,7 @@ profiles:
 
 > **WARNING**: It is an important clarification that this is NOT a full
 > Kubernetes API. It uses `TypeMeta` for some fields that made sense to re-use
-> and were familiar, but otherwise has it's own structure. It is not a [Custom
+> and were familiar, but otherwise has its own structure. It is not a [Custom
 > Resource Definition (CRD)][crd] nor will it be made available along with our
 > CRDs. It will be used only by conformance test tooling.
 
@@ -368,11 +368,11 @@ profiles:
 > theoretically have multiple projects and should submit separate reports for
 > each of them.
 
-> **NOTE**: The `contact` field indicates the Github usernames or team
+> **NOTE**: The `contact` field indicates the GitHub usernames or team
 > names of those who are responsible for maintaining this file, so they can be
 > easily contacted when needed (e.g. for relevant release announcements
 > regarding conformance, e.t.c.). Optionally, it can be an email address or
-> a support URL (e.g. Github new issue page).
+> a support URL (e.g. GitHub new issue page).
 
 The above report describes an implementation that just released `v1`, uses gateway
 API `v0.8.0` `experimental` channel, and has `HTTP` `core` and `extended` and `TCP`
@@ -601,7 +601,7 @@ Maintainers will provide [badges][bdg] to implementations at the end of the proc
 which link to the implementations page for that specific implementation and can
 be easily added via markdown to Git repositories.
 
-[impl]:https://gateway-api.sigs.k8s.io/implementations/
+[impl]:../../implementations.md
 [bdg]:https://shields.io
 
 ## Alternatives Considered

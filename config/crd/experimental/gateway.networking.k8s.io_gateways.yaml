@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     api-approved.kubernetes.io: https://github.com/kubernetes-sigs/gateway-api/pull/3328
-    gateway.networking.k8s.io/bundle-version: v1.2.1
+    gateway.networking.k8s.io/bundle-version: v1.3.0
     gateway.networking.k8s.io/channel: experimental
   creationTimestamp: null
   name: gateways.gateway.networking.k8s.io
@@ -61,7 +61,7 @@ spec:
             description: Spec defines the desired state of Gateway.
             properties:
               addresses:
-                description: |+
+                description: |-
                   Addresses requested for this Gateway. This is optional and behavior can
                   depend on the implementation. If a value is set in the spec and the
                   requested address is invalid or unavailable, the implementation MUST
@@ -82,10 +82,9 @@ spec:
                   GatewayStatus.Addresses.
 
                   Support: Extended
-
                 items:
-                  description: GatewayAddress describes an address that can be bound
-                    to a Gateway.
+                  description: GatewaySpecAddress describes an address that can be
+                    bound to a Gateway.
                   oneOf:
                   - properties:
                       type:
@@ -110,15 +109,15 @@ spec:
                       type: string
                     value:
                       description: |-
-                        Value of the address. The validity of the values will depend
-                        on the type and support by the controller.
+                        When a value is unspecified, an implementation SHOULD automatically
+                        assign an address matching the requested type if possible.
+
+                        If an implementation does not support an empty value, they MUST set the
+                        "Programmed" condition in status to False with a reason of "AddressNotAssigned".
 
                         Examples: `1.2.3.4`, `128::1`, `my-ip-address`.
                       maxLength: 253
-                      minLength: 1
                       type: string
-                  required:
-                  - value
                   type: object
                   x-kubernetes-validations:
                   - message: Hostname value must only contain valid characters (matching
@@ -127,6 +126,7 @@ spec:
                       true'
                 maxItems: 16
                 type: array
+                x-kubernetes-list-type: atomic
                 x-kubernetes-validations:
                 - message: IPAddress values must be unique
                   rule: 'self.all(a1, a1.type == ''IPAddress'' ? self.exists_one(a2,
@@ -134,16 +134,96 @@ spec:
                 - message: Hostname values must be unique
                   rule: 'self.all(a1, a1.type == ''Hostname'' ? self.exists_one(a2,
                     a2.type == a1.type && a2.value == a1.value) : true )'
+              allowedListeners:
+                description: |-
+                  AllowedListeners defines which ListenerSets can be attached to this Gateway.
+                  While this feature is experimental, the default value is to allow no ListenerSets.
+                properties:
+                  namespaces:
+                    default:
+                      from: None
+                    description: |-
+                      Namespaces defines which namespaces ListenerSets can be attached to this Gateway.
+                      While this feature is experimental, the default value is to allow no ListenerSets.
+                    properties:
+                      from:
+                        default: None
+                        description: |-
+                          From indicates where ListenerSets can attach to this Gateway. Possible
+                          values are:
+
+                          * Same: Only ListenerSets in the same namespace may be attached to this Gateway.
+                          * Selector: ListenerSets in namespaces selected by the selector may be attached to this Gateway.
+                          * All: ListenerSets in all namespaces may be attached to this Gateway.
+                          * None: Only listeners defined in the Gateway's spec are allowed
+
+                          While this feature is experimental, the default value None
+                        enum:
+                        - All
+                        - Selector
+                        - Same
+                        - None
+                        type: string
+                      selector:
+                        description: |-
+                          Selector must be specified when From is set to "Selector". In that case,
+                          only ListenerSets in Namespaces matching this Selector will be selected by this
+                          Gateway. This field is ignored for other values of "From".
+                        properties:
+                          matchExpressions:
+                            description: matchExpressions is a list of label selector
+                              requirements. The requirements are ANDed.
+                            items:
+                              description: |-
+                                A label selector requirement is a selector that contains values, a key, and an operator that
+                                relates the key and values.
+                              properties:
+                                key:
+                                  description: key is the label key that the selector
+                                    applies to.
+                                  type: string
+                                operator:
+                                  description: |-
+                                    operator represents a key's relationship to a set of values.
+                                    Valid operators are In, NotIn, Exists and DoesNotExist.
+                                  type: string
+                                values:
+                                  description: |-
+                                    values is an array of string values. If the operator is In or NotIn,
+                                    the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                    the values array must be empty. This array is replaced during a strategic
+                                    merge patch.
+                                  items:
+                                    type: string
+                                  type: array
+                                  x-kubernetes-list-type: atomic
+                              required:
+                              - key
+                              - operator
+                              type: object
+                            type: array
+                            x-kubernetes-list-type: atomic
+                          matchLabels:
+                            additionalProperties:
+                              type: string
+                            description: |-
+                              matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                              map is equivalent to an element of matchExpressions, whose key field is "key", the
+                              operator is "In", and the values array contains only "value". The requirements are ANDed.
+                            type: object
+                        type: object
+                        x-kubernetes-map-type: atomic
+                    type: object
+                type: object
               backendTLS:
-                description: |+
+                description: |-
                   BackendTLS configures TLS settings for when this Gateway is connecting to
                   backends with TLS.
 
                   Support: Core
-
                 properties:
                   clientCertificateRef:
-                    description: |+
+                    description: |-
                       ClientCertificateRef is a reference to an object that contains a Client
                       Certificate and the associated private key.
 
@@ -159,7 +239,6 @@ spec:
                       This setting can be overridden on the service level by use of BackendTLSPolicy.
 
                       Support: Core
-
                     properties:
                       group:
                         default: ""
@@ -294,6 +373,11 @@ spec:
                       the merging behavior is implementation specific.
                       It is generally recommended that GatewayClass provides defaults that can be overridden by a Gateway.
 
+                      If the referent cannot be found, refers to an unsupported kind, or when
+                      the data within that resource is malformed, the Gateway SHOULD be
+                      rejected with the "Accepted" status condition set to "False" and an
+                      "InvalidParameters" reason.
+
                       Support: Implementation-specific
                     properties:
                       group:
@@ -420,7 +504,7 @@ spec:
                   Listeners are _Conflicted_, and the implementation MUST set the "Conflicted"
                   condition in the Listener Status to "True".
 
-                  The words "indistict" and "conflicted" are considered equivalent for the
+                  The words "indistinct" and "conflicted" are considered equivalent for the
                   purpose of this documentation.
 
                   Implementations MAY choose to accept a Gateway with some Conflicted
@@ -477,6 +561,8 @@ spec:
 
                   Implementations MAY merge separate Gateways onto a single set of
                   Addresses if all Listeners across all Gateways are compatible.
+
+                  In a future release the MinItems=1 requirement MAY be dropped.
 
                   Support: Core
                 items:
@@ -548,6 +634,7 @@ spec:
                             type: object
                           maxItems: 8
                           type: array
+                          x-kubernetes-list-type: atomic
                         namespaces:
                           default:
                             from: Same
@@ -639,10 +726,31 @@ spec:
 
                         * TLS: The Listener Hostname MUST match the SNI.
                         * HTTP: The Listener Hostname MUST match the Host header of the request.
-                        * HTTPS: The Listener Hostname SHOULD match at both the TLS and HTTP
-                          protocol layers as described above. If an implementation does not
-                          ensure that both the SNI and Host header match the Listener hostname,
-                          it MUST clearly document that.
+                        * HTTPS: The Listener Hostname SHOULD match both the SNI and Host header.
+                          Note that this does not require the SNI and Host header to be the same.
+                          The semantics of this are described in more detail below.
+
+                        To ensure security, Section 11.1 of RFC-6066 emphasizes that server
+                        implementations that rely on SNI hostname matching MUST also verify
+                        hostnames within the application protocol.
+
+                        Section 9.1.2 of RFC-7540 provides a mechanism for servers to reject the
+                        reuse of a connection by responding with the HTTP 421 Misdirected Request
+                        status code. This indicates that the origin server has rejected the
+                        request because it appears to have been misdirected.
+
+                        To detect misdirected requests, Gateways SHOULD match the authority of
+                        the requests with all the SNI hostname(s) configured across all the
+                        Gateway Listeners on the same port and protocol:
+
+                        * If another Listener has an exact match or more specific wildcard entry,
+                          the Gateway SHOULD return a 421.
+                        * If the current Listener (selected by SNI matching during ClientHello)
+                          does not match the Host:
+                            * If another Listener does match the Host the Gateway SHOULD return a
+                              421.
+                            * If no other Listener matches the Host, the Gateway MUST return a
+                              404.
 
                         For HTTPRoute and TLSRoute resources, there is an interaction with the
                         `spec.hostnames` array. When both listener and route specify hostnames,
@@ -781,8 +889,9 @@ spec:
                             type: object
                           maxItems: 64
                           type: array
+                          x-kubernetes-list-type: atomic
                         frontendValidation:
-                          description: |+
+                          description: |-
                             FrontendValidation holds configuration information for validating the frontend (client).
                             Setting this field will require clients to send a client certificate
                             required for validation during the TLS handshake. In browsers this may result in a dialog appearing
@@ -790,7 +899,6 @@ spec:
                             The maximum depth of a certificate chain accepted in verification is Implementation specific.
 
                             Support: Extended
-
                           properties:
                             caCertificateRefs:
                               description: |-
@@ -829,7 +937,7 @@ spec:
                                   group:
                                     description: |-
                                       Group is the group of the referent. For example, "gateway.networking.k8s.io".
-                                      When unspecified or empty string, core API group is inferred.
+                                      When set to the empty string, core API group is inferred.
                                     maxLength: 253
                                     pattern: ^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                     type: string
@@ -868,6 +976,9 @@ spec:
                               maxItems: 8
                               minItems: 1
                               type: array
+                              x-kubernetes-list-type: atomic
+                          required:
+                          - caCertificateRefs
                           type: object
                         mode:
                           default: Terminate
@@ -967,7 +1078,7 @@ spec:
             description: Status defines the current state of Gateway.
             properties:
               addresses:
-                description: |+
+                description: |-
                   Addresses lists the network addresses that have been bound to the
                   Gateway.
 
@@ -977,7 +1088,6 @@ spec:
                     * no addresses are specified, all addresses are dynamically assigned
                     * a combination of specified and dynamic addresses are assigned
                     * a specified address was unusable (e.g. already in use)
-
                 items:
                   description: GatewayStatusAddress describes a network address that
                     is bound to a Gateway.
@@ -1022,6 +1132,7 @@ spec:
                       true'
                 maxItems: 16
                 type: array
+                x-kubernetes-list-type: atomic
               conditions:
                 default:
                 - lastTransitionTime: "1970-01-01T00:00:00Z"
@@ -1235,6 +1346,7 @@ spec:
                         type: object
                       maxItems: 8
                       type: array
+                      x-kubernetes-list-type: atomic
                   required:
                   - attachedRoutes
                   - conditions
@@ -1295,7 +1407,7 @@ spec:
             description: Spec defines the desired state of Gateway.
             properties:
               addresses:
-                description: |+
+                description: |-
                   Addresses requested for this Gateway. This is optional and behavior can
                   depend on the implementation. If a value is set in the spec and the
                   requested address is invalid or unavailable, the implementation MUST
@@ -1316,10 +1428,9 @@ spec:
                   GatewayStatus.Addresses.
 
                   Support: Extended
-
                 items:
-                  description: GatewayAddress describes an address that can be bound
-                    to a Gateway.
+                  description: GatewaySpecAddress describes an address that can be
+                    bound to a Gateway.
                   oneOf:
                   - properties:
                       type:
@@ -1344,15 +1455,15 @@ spec:
                       type: string
                     value:
                       description: |-
-                        Value of the address. The validity of the values will depend
-                        on the type and support by the controller.
+                        When a value is unspecified, an implementation SHOULD automatically
+                        assign an address matching the requested type if possible.
+
+                        If an implementation does not support an empty value, they MUST set the
+                        "Programmed" condition in status to False with a reason of "AddressNotAssigned".
 
                         Examples: `1.2.3.4`, `128::1`, `my-ip-address`.
                       maxLength: 253
-                      minLength: 1
                       type: string
-                  required:
-                  - value
                   type: object
                   x-kubernetes-validations:
                   - message: Hostname value must only contain valid characters (matching
@@ -1361,6 +1472,7 @@ spec:
                       true'
                 maxItems: 16
                 type: array
+                x-kubernetes-list-type: atomic
                 x-kubernetes-validations:
                 - message: IPAddress values must be unique
                   rule: 'self.all(a1, a1.type == ''IPAddress'' ? self.exists_one(a2,
@@ -1368,16 +1480,96 @@ spec:
                 - message: Hostname values must be unique
                   rule: 'self.all(a1, a1.type == ''Hostname'' ? self.exists_one(a2,
                     a2.type == a1.type && a2.value == a1.value) : true )'
+              allowedListeners:
+                description: |-
+                  AllowedListeners defines which ListenerSets can be attached to this Gateway.
+                  While this feature is experimental, the default value is to allow no ListenerSets.
+                properties:
+                  namespaces:
+                    default:
+                      from: None
+                    description: |-
+                      Namespaces defines which namespaces ListenerSets can be attached to this Gateway.
+                      While this feature is experimental, the default value is to allow no ListenerSets.
+                    properties:
+                      from:
+                        default: None
+                        description: |-
+                          From indicates where ListenerSets can attach to this Gateway. Possible
+                          values are:
+
+                          * Same: Only ListenerSets in the same namespace may be attached to this Gateway.
+                          * Selector: ListenerSets in namespaces selected by the selector may be attached to this Gateway.
+                          * All: ListenerSets in all namespaces may be attached to this Gateway.
+                          * None: Only listeners defined in the Gateway's spec are allowed
+
+                          While this feature is experimental, the default value None
+                        enum:
+                        - All
+                        - Selector
+                        - Same
+                        - None
+                        type: string
+                      selector:
+                        description: |-
+                          Selector must be specified when From is set to "Selector". In that case,
+                          only ListenerSets in Namespaces matching this Selector will be selected by this
+                          Gateway. This field is ignored for other values of "From".
+                        properties:
+                          matchExpressions:
+                            description: matchExpressions is a list of label selector
+                              requirements. The requirements are ANDed.
+                            items:
+                              description: |-
+                                A label selector requirement is a selector that contains values, a key, and an operator that
+                                relates the key and values.
+                              properties:
+                                key:
+                                  description: key is the label key that the selector
+                                    applies to.
+                                  type: string
+                                operator:
+                                  description: |-
+                                    operator represents a key's relationship to a set of values.
+                                    Valid operators are In, NotIn, Exists and DoesNotExist.
+                                  type: string
+                                values:
+                                  description: |-
+                                    values is an array of string values. If the operator is In or NotIn,
+                                    the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                    the values array must be empty. This array is replaced during a strategic
+                                    merge patch.
+                                  items:
+                                    type: string
+                                  type: array
+                                  x-kubernetes-list-type: atomic
+                              required:
+                              - key
+                              - operator
+                              type: object
+                            type: array
+                            x-kubernetes-list-type: atomic
+                          matchLabels:
+                            additionalProperties:
+                              type: string
+                            description: |-
+                              matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                              map is equivalent to an element of matchExpressions, whose key field is "key", the
+                              operator is "In", and the values array contains only "value". The requirements are ANDed.
+                            type: object
+                        type: object
+                        x-kubernetes-map-type: atomic
+                    type: object
+                type: object
               backendTLS:
-                description: |+
+                description: |-
                   BackendTLS configures TLS settings for when this Gateway is connecting to
                   backends with TLS.
 
                   Support: Core
-
                 properties:
                   clientCertificateRef:
-                    description: |+
+                    description: |-
                       ClientCertificateRef is a reference to an object that contains a Client
                       Certificate and the associated private key.
 
@@ -1393,7 +1585,6 @@ spec:
                       This setting can be overridden on the service level by use of BackendTLSPolicy.
 
                       Support: Core
-
                     properties:
                       group:
                         default: ""
@@ -1528,6 +1719,11 @@ spec:
                       the merging behavior is implementation specific.
                       It is generally recommended that GatewayClass provides defaults that can be overridden by a Gateway.
 
+                      If the referent cannot be found, refers to an unsupported kind, or when
+                      the data within that resource is malformed, the Gateway SHOULD be
+                      rejected with the "Accepted" status condition set to "False" and an
+                      "InvalidParameters" reason.
+
                       Support: Implementation-specific
                     properties:
                       group:
@@ -1654,7 +1850,7 @@ spec:
                   Listeners are _Conflicted_, and the implementation MUST set the "Conflicted"
                   condition in the Listener Status to "True".
 
-                  The words "indistict" and "conflicted" are considered equivalent for the
+                  The words "indistinct" and "conflicted" are considered equivalent for the
                   purpose of this documentation.
 
                   Implementations MAY choose to accept a Gateway with some Conflicted
@@ -1711,6 +1907,8 @@ spec:
 
                   Implementations MAY merge separate Gateways onto a single set of
                   Addresses if all Listeners across all Gateways are compatible.
+
+                  In a future release the MinItems=1 requirement MAY be dropped.
 
                   Support: Core
                 items:
@@ -1782,6 +1980,7 @@ spec:
                             type: object
                           maxItems: 8
                           type: array
+                          x-kubernetes-list-type: atomic
                         namespaces:
                           default:
                             from: Same
@@ -1873,10 +2072,31 @@ spec:
 
                         * TLS: The Listener Hostname MUST match the SNI.
                         * HTTP: The Listener Hostname MUST match the Host header of the request.
-                        * HTTPS: The Listener Hostname SHOULD match at both the TLS and HTTP
-                          protocol layers as described above. If an implementation does not
-                          ensure that both the SNI and Host header match the Listener hostname,
-                          it MUST clearly document that.
+                        * HTTPS: The Listener Hostname SHOULD match both the SNI and Host header.
+                          Note that this does not require the SNI and Host header to be the same.
+                          The semantics of this are described in more detail below.
+
+                        To ensure security, Section 11.1 of RFC-6066 emphasizes that server
+                        implementations that rely on SNI hostname matching MUST also verify
+                        hostnames within the application protocol.
+
+                        Section 9.1.2 of RFC-7540 provides a mechanism for servers to reject the
+                        reuse of a connection by responding with the HTTP 421 Misdirected Request
+                        status code. This indicates that the origin server has rejected the
+                        request because it appears to have been misdirected.
+
+                        To detect misdirected requests, Gateways SHOULD match the authority of
+                        the requests with all the SNI hostname(s) configured across all the
+                        Gateway Listeners on the same port and protocol:
+
+                        * If another Listener has an exact match or more specific wildcard entry,
+                          the Gateway SHOULD return a 421.
+                        * If the current Listener (selected by SNI matching during ClientHello)
+                          does not match the Host:
+                            * If another Listener does match the Host the Gateway SHOULD return a
+                              421.
+                            * If no other Listener matches the Host, the Gateway MUST return a
+                              404.
 
                         For HTTPRoute and TLSRoute resources, there is an interaction with the
                         `spec.hostnames` array. When both listener and route specify hostnames,
@@ -2015,8 +2235,9 @@ spec:
                             type: object
                           maxItems: 64
                           type: array
+                          x-kubernetes-list-type: atomic
                         frontendValidation:
-                          description: |+
+                          description: |-
                             FrontendValidation holds configuration information for validating the frontend (client).
                             Setting this field will require clients to send a client certificate
                             required for validation during the TLS handshake. In browsers this may result in a dialog appearing
@@ -2024,7 +2245,6 @@ spec:
                             The maximum depth of a certificate chain accepted in verification is Implementation specific.
 
                             Support: Extended
-
                           properties:
                             caCertificateRefs:
                               description: |-
@@ -2063,7 +2283,7 @@ spec:
                                   group:
                                     description: |-
                                       Group is the group of the referent. For example, "gateway.networking.k8s.io".
-                                      When unspecified or empty string, core API group is inferred.
+                                      When set to the empty string, core API group is inferred.
                                     maxLength: 253
                                     pattern: ^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                                     type: string
@@ -2102,6 +2322,9 @@ spec:
                               maxItems: 8
                               minItems: 1
                               type: array
+                              x-kubernetes-list-type: atomic
+                          required:
+                          - caCertificateRefs
                           type: object
                         mode:
                           default: Terminate
@@ -2201,7 +2424,7 @@ spec:
             description: Status defines the current state of Gateway.
             properties:
               addresses:
-                description: |+
+                description: |-
                   Addresses lists the network addresses that have been bound to the
                   Gateway.
 
@@ -2211,7 +2434,6 @@ spec:
                     * no addresses are specified, all addresses are dynamically assigned
                     * a combination of specified and dynamic addresses are assigned
                     * a specified address was unusable (e.g. already in use)
-
                 items:
                   description: GatewayStatusAddress describes a network address that
                     is bound to a Gateway.
@@ -2256,6 +2478,7 @@ spec:
                       true'
                 maxItems: 16
                 type: array
+                x-kubernetes-list-type: atomic
               conditions:
                 default:
                 - lastTransitionTime: "1970-01-01T00:00:00Z"
@@ -2469,6 +2692,7 @@ spec:
                         type: object
                       maxItems: 8
                       type: array
+                      x-kubernetes-list-type: atomic
                   required:
                   - attachedRoutes
                   - conditions
