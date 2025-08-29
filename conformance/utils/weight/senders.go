@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Kubernetes Authors.
+Copyright 2025 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,12 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha2
+package weight
 
-import v1 "sigs.k8s.io/gateway-api/apis/v1"
+// FunctionBasedSender implements RequestSender using a function
+type FunctionBasedSender struct {
+	sendFunc func() (string, error)
+}
 
-type LocalObjectReference = v1.LocalObjectReference
+func (s *FunctionBasedSender) SendRequest() (string, error) {
+	return s.sendFunc()
+}
 
-type SecretObjectReference = v1.SecretObjectReference
-
-type BackendObjectReference = v1.BackendObjectReference
+// NewFunctionBasedSender creates a RequestSender from a function
+func NewFunctionBasedSender(sendFunc func() (string, error)) RequestSender {
+	return &FunctionBasedSender{sendFunc: sendFunc}
+}
