@@ -24,7 +24,7 @@ import (
 	managedfields "k8s.io/apimachinery/pkg/util/managedfields"
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 	apisxv1alpha1 "sigs.k8s.io/gateway-api/apisx/v1alpha1"
-	v1alpha2 "sigs.k8s.io/gateway-api/applyconfiguration/apis/v1alpha2"
+	apisv1 "sigs.k8s.io/gateway-api/applyconfiguration/apis/v1"
 	internal "sigs.k8s.io/gateway-api/applyconfiguration/internal"
 )
 
@@ -34,7 +34,7 @@ type XBackendTrafficPolicyApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
 	Spec                             *BackendTrafficPolicySpecApplyConfiguration `json:"spec,omitempty"`
-	Status                           *v1alpha2.PolicyStatusApplyConfiguration    `json:"status,omitempty"`
+	Status                           *apisv1.PolicyStatusApplyConfiguration      `json:"status,omitempty"`
 }
 
 // XBackendTrafficPolicy constructs a declarative configuration of the XBackendTrafficPolicy type for use with
@@ -254,7 +254,7 @@ func (b *XBackendTrafficPolicyApplyConfiguration) WithSpec(value *BackendTraffic
 // WithStatus sets the Status field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Status field is set to the value of the last call.
-func (b *XBackendTrafficPolicyApplyConfiguration) WithStatus(value *v1alpha2.PolicyStatusApplyConfiguration) *XBackendTrafficPolicyApplyConfiguration {
+func (b *XBackendTrafficPolicyApplyConfiguration) WithStatus(value *apisv1.PolicyStatusApplyConfiguration) *XBackendTrafficPolicyApplyConfiguration {
 	b.Status = value
 	return b
 }

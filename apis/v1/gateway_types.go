@@ -246,7 +246,7 @@ type GatewaySpec struct {
 	// Addresses requested for this Gateway. This is optional and behavior can
 	// depend on the implementation. If a value is set in the spec and the
 	// requested address is invalid or unavailable, the implementation MUST
-	// indicate this in the associated entry in GatewayStatus.Addresses.
+	// indicate this in an associated entry in GatewayStatus.Conditions.
 	//
 	// The Addresses field represents a request for the address(es) on the
 	// "outside of the Gateway", that traffic bound for this Gateway will use.
@@ -268,8 +268,8 @@ type GatewaySpec struct {
 	// +listType=atomic
 	// <gateway:validateIPAddress>
 	// +kubebuilder:validation:MaxItems=16
-	// +kubebuilder:validation:XValidation:message="IPAddress values must be unique",rule="self.all(a1, a1.type == 'IPAddress' ? self.exists_one(a2, a2.type == a1.type && a2.value == a1.value) : true )"
-	// +kubebuilder:validation:XValidation:message="Hostname values must be unique",rule="self.all(a1, a1.type == 'Hostname' ? self.exists_one(a2, a2.type == a1.type && a2.value == a1.value) : true )"
+	// +kubebuilder:validation:XValidation:message="IPAddress values must be unique",rule="self.all(a1, a1.type == 'IPAddress' && has(a1.value) ? self.exists_one(a2, a2.type == a1.type && has(a2.value) && a2.value == a1.value) : true )"
+	// +kubebuilder:validation:XValidation:message="Hostname values must be unique",rule="self.all(a1, a1.type == 'Hostname'  && has(a1.value) ? self.exists_one(a2, a2.type == a1.type && has(a2.value) && a2.value == a1.value) : true )"
 	Addresses []GatewaySpecAddress `json:"addresses,omitempty"`
 
 	// Infrastructure defines infrastructure level attributes about this Gateway instance.
@@ -294,6 +294,28 @@ type GatewaySpec struct {
 	// +optional
 	// <gateway:experimental>
 	TLS *GatewayTLSConfig `json:"tls,omitempty"`
+
+	// DefaultScope, when set, configures the Gateway as a default Gateway,
+	// meaning it will dynamically and implicitly have Routes (e.g. HTTPRoute)
+	// attached to it, according to the scope configured here.
+	//
+	// If unset (the default) or set to None, the Gateway will not act as a
+	// default Gateway; if set, the Gateway will claim any Route with a
+	// matching scope set in its UseDefaultGateway field, subject to the usual
+	// rules about which routes the Gateway can attach to.
+	//
+	// Think carefully before using this functionality! While the normal rules
+	// about which Route can apply are still enforced, it is simply easier for
+	// the wrong Route to be accidentally attached to this Gateway in this
+	// configuration. If the Gateway operator is not also the operator in
+	// control of the scope (e.g. namespace) with tight controls and checks on
+	// what kind of workloads and Routes get added in that scope, we strongly
+	// recommend not using this just because it seems convenient, and instead
+	// stick to direct Route attachment.
+	//
+	// +optional
+	// <gateway:experimental>
+	DefaultScope GatewayDefaultScope `json:"defaultScope,omitempty"`
 }
 
 // AllowedListeners defines which ListenerSets can be attached to this Gateway.
@@ -862,7 +884,7 @@ type RouteGroupKind struct {
 
 // GatewaySpecAddress describes an address that can be bound to a Gateway.
 //
-// +kubebuilder:validation:XValidation:message="Hostname value must only contain valid characters (matching ^(\\*\\.)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$)",rule="self.type == 'Hostname' ? self.value.matches(r\"\"\"^(\\*\\.)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$\"\"\"): true"
+// +kubebuilder:validation:XValidation:message="Hostname value must be empty or contain only valid characters (matching ^(\\*\\.)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$)",rule="self.type == 'Hostname' ? (!has(self.value) || self.value.matches(r\"\"\"^(\\*\\.)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$\"\"\")): true"
 type GatewaySpecAddress struct {
 	// Type of the address.
 	//

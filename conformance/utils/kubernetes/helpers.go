@@ -37,7 +37,6 @@ import (
 
 	gatewayv1 "sigs.k8s.io/gateway-api/apis/v1"
 	"sigs.k8s.io/gateway-api/apis/v1alpha2"
-	"sigs.k8s.io/gateway-api/apis/v1alpha3"
 	"sigs.k8s.io/gateway-api/conformance/utils/config"
 	"sigs.k8s.io/gateway-api/conformance/utils/tlog"
 )
@@ -345,7 +344,7 @@ func GatewayAndRoutesMustBeAccepted(t *testing.T, c client.Client, timeoutConfig
 	// If the Gateway has multiple listeners, get a portless gwAddr.
 	// Otherwise, you get the first listener's port, which might not be the one you want.
 	if !usePort {
-		gwAddr, _, _ = strings.Cut(gwAddr, ":")
+		gwAddr, _, _ = net.SplitHostPort(gwAddr)
 	}
 
 	ns := gatewayv1.Namespace(gw.Namespace)
@@ -1000,7 +999,7 @@ func findPodConditionInList(t *testing.T, conditions []v1.PodCondition, condName
 func BackendTLSPolicyMustHaveCondition(t *testing.T, client client.Client, timeoutConfig config.TimeoutConfig, policyNN, gwNN types.NamespacedName, condition metav1.Condition) {
 	t.Helper()
 	waitErr := wait.PollUntilContextTimeout(context.Background(), 1*time.Second, timeoutConfig.HTTPRouteMustHaveCondition, true, func(ctx context.Context) (bool, error) {
-		policy := &v1alpha3.BackendTLSPolicy{}
+		policy := &gatewayv1.BackendTLSPolicy{}
 		err := client.Get(ctx, policyNN, policy)
 		if err != nil {
 			return false, fmt.Errorf("error fetching BackendTLSPolicy %v err: %w", policyNN, err)
@@ -1029,7 +1028,7 @@ func BackendTLSPolicyMustHaveCondition(t *testing.T, client client.Client, timeo
 
 // BackendTLSPolicyMustHaveLatestConditions will fail the test if there are
 // conditions that were not updated
-func BackendTLSPolicyMustHaveLatestConditions(t *testing.T, r *v1alpha3.BackendTLSPolicy) {
+func BackendTLSPolicyMustHaveLatestConditions(t *testing.T, r *gatewayv1.BackendTLSPolicy) {
 	t.Helper()
 
 	for _, ancestor := range r.Status.Ancestors {
