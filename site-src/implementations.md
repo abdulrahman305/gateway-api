@@ -6,7 +6,7 @@ and provides status and resource references for them.
 Implementors and integrators of Gateway API are encouraged to update this
 document with status information about their implementations, the versions they
 cover, and documentation to help users get started. This status information should
-be no longer than a few paragraphs. 
+be no longer than a few paragraphs.
 
 ## Conformance levels
 
@@ -19,7 +19,7 @@ These implementations have submitted at least one conformance report that has pa
   * All core conformance tests for at least one combination of Route type and
     Profile
   * All claimed Extended features
-  
+
 for one of the two (2) most recent Gateway API releases.
 
 So, it's conformant to support Mesh + HTTPRoute, or Gateway + HTTPRoute, or
@@ -192,12 +192,12 @@ In this section you will find specific links to blog posts, documentation and ot
 [epicsource]:https://github.com/epic-gateway
 
 ### Agent Gateway (with Kgateway)
-[![Conformance](https://img.shields.io/badge/Gateway%20API%20Conformance%20v1.3.0-Agentgateway-green)](https://github.com/kubernetes-sigs/gateway-api/blob/main/conformance/reports/v1.3.0/airlock-microgateway)
+[![Conformance](https://img.shields.io/badge/Gateway%20API%20Conformance%20v1.4.0-Agentgateway-green)](https://github.com/kubernetes-sigs/gateway-api/blob/main/conformance/reports/v1.4.0/agentgateway-agentgateway)
 
 [Agent Gateway](https://agentgateway.dev/) is an open source Gateway API implementation focusing on AI use cases, including LLM consumption, LLM serving, agent-to-agent ([A2A](https://a2aproject.github.io/A2A/latest/)), and agent-to-tool ([MCP](https://modelcontextprotocol.io/introduction)). It is the first and only proxy designed specifically for the Kubernetes Gateway API, powered by a high performance and scalable Rust dataplane implementation.
 
 ### Airlock Microgateway
-[![Conformance](https://img.shields.io/badge/Gateway%20API%20Conformance%20v1.3.0-Airlock%20Microgateway-green)](https://github.com/kubernetes-sigs/gateway-api/blob/main/conformance/reports/v1.3.0/airlock-microgateway)
+[![Conformance](https://img.shields.io/badge/Gateway%20API%20Conformance%20v1.4.0-Airlock%20Microgateway-green)](https://github.com/kubernetes-sigs/gateway-api/blob/main/conformance/reports/v1.4.0/airlock-microgateway)
 
 [Airlock Microgateway][airlock-microgateway] is a Kubernetes native WAAP (Web Application and API Protection, formerly known as WAF) solution optimized for Kubernetes environments and certified for Red Hat OpenShift.
 Modern application security is embedded in the development workflow and follows DevSecOps paradigms.
@@ -241,13 +241,13 @@ APISIX currently supports Gateway API `v1beta1` version of the specification for
 
 [Avi Kubernetes Operator (AKO)][ako] provides L4-L7 load-balancing using VMware AVI Advanced Load Balancer.
 
-Starting with AKO version [v1.13.1], Gateway API version v1.0.0 is supported. It implements v1 version of Gateway API specification supporting GatewayClass, Gateway and HTTPRoute objects.
+Starting with AKO version [v2.1.1], Gateway API version v1.3.0 is supported. It implements v1 version of Gateway API specification supporting GatewayClass, Gateway and HTTPRoute objects.
 
 Documentation to deploy and use AKO Gateway API can be found at [Avi Kubernetes Operator Gateway API][ako-gw].
 
-[ako]:https://techdocs.broadcom.com/us/en/vmware-security-load-balancing/avi-load-balancer/avi-kubernetes-operator/AKO/avi-kubernetes-operator-1-13/avi-kubernetes-operator.html
-[ako-gw]:https://techdocs.broadcom.com/us/en/vmware-security-load-balancing/avi-load-balancer/avi-kubernetes-operator/AKO/avi-kubernetes-operator-1-13/gateway-api/gateway-api-v1.html
-[v1.13.1]:https://github.com/vmware/load-balancer-and-ingress-services-for-kubernetes
+[ako]:https://techdocs.broadcom.com/us/en/vmware-security-load-balancing/avi-load-balancer/avi-kubernetes-operator/2-1.html
+[ako-gw]:https://techdocs.broadcom.com/us/en/vmware-security-load-balancing/avi-load-balancer/avi-kubernetes-operator/2-1/avi-kubernetes-operator-guide-2-1/gateway-api/gateway-api-v1.html
+[v2.1.1]:https://github.com/vmware/load-balancer-and-ingress-services-for-kubernetes
 
 ### Azure Application Gateway for Containers
 
@@ -261,7 +261,7 @@ Documentation to deploy and use AKO Gateway API can be found at [Avi Kubernetes 
 
 ### Cilium
 
-[![Conformance](https://img.shields.io/badge/Gateway%20API%20Conformance%20v1.3.0-Cilium-green)](https://github.com/kubernetes-sigs/gateway-api/blob/main/conformance/reports/v1.3.0/cilium-cilium)
+[![Conformance](https://img.shields.io/badge/Gateway%20API%20Conformance%20v1.4.0-Cilium-green)](https://github.com/kubernetes-sigs/gateway-api/blob/main/conformance/reports/v1.4.0/cilium)
 
 [Cilium][cilium] is an eBPF-based networking, observability and security
 solution for Kubernetes and other networking environments. It includes [Cilium
@@ -269,7 +269,7 @@ Service Mesh][cilium-service-mesh], a highly efficient mesh data plane that can
 be run in [sidecarless mode][cilium-sidecarless] to dramatically improve
 performance, and avoid the operational complexity of sidecars. Cilium also
 supports the sidecar proxy model, offering choice to users.
-Cilium supports Gateway API, passing conformance for v1.3.0 as of [Cilium 1.18][cilium118blog].
+Cilium supports Gateway API, passing conformance for v1.4.0 as of Cilium 1.19
 
 Cilium is open source and is a CNCF Graduated project.
 
@@ -328,7 +328,7 @@ See [here][emissary-gateway-api] for more details on using the Gateway API with 
 
 ### Envoy Gateway
 
-[![Conformance](https://img.shields.io/badge/Gateway%20API%20Conformance%20v1.0.0-EnvoyGateway-green)](https://github.com/kubernetes-sigs/gateway-api/blob/main/conformance/reports/v1.0.0/envoy-gateway)
+[![Conformance](https://img.shields.io/badge/Gateway%20API%20Conformance%20v1.4.0-EnvoyGateway-green)](https://github.com/kubernetes-sigs/gateway-api/blob/main/conformance/reports/v1.4.0/envoy-gateway)
 
 [Envoy Gateway][eg-home] is an [Envoy][envoy-org] subproject for managing Envoy-based application gateways. The supported
 APIs and fields of the Gateway API are outlined [here][eg-supported].
@@ -386,7 +386,7 @@ Google Cloud Service Mesh supports [Envoy-based sidecar mesh][envoy-sidecar-mesh
 
 ### Google Kubernetes Engine
 
-[![Conformance](https://img.shields.io/badge/Gateway_API_Partial_Conformance_v1.3.0-Google_Kubernetes_Engine-orange)](https://github.com/kubernetes-sigs/gateway-api/blob/main/conformance/reports/v1.3.0/gke-gateway)
+[![Conformance](https://img.shields.io/badge/Gateway_API_Partial_Conformance_v1.3.0-Google_Kubernetes_Engine-orange)](https://github.com/kubernetes-sigs/gateway-api/blob/main/conformance/reports/v1.4.0/gke-gateway)
 
 [Google Kubernetes Engine (GKE)][gke] is a managed Kubernetes platform offered
 by Google Cloud. GKE's implementation of the Gateway API is through the [GKE
@@ -399,7 +399,7 @@ advanced routing, multi-cluster load balancing and more. See the docs to deploy
 Gateways][gke-multi-cluster-gateway].
 
 The GKE Gateway controller passes all the core Gateway API conformance tests in the
-v1.3.0 release for the GATEWAY_HTTP conformance profile except `HTTPRouteHostnameIntersection`.
+v1.4.0 release for the GATEWAY_HTTP conformance profile except `HTTPRouteHostnameIntersection`.
 
 [gke]:https://cloud.google.com/kubernetes-engine
 [gke-gateway]:https://cloud.google.com/kubernetes-engine/docs/concepts/gateway-api
@@ -436,7 +436,7 @@ Please see the [Consul API Gateway documentation][consul-api-gw-docs] for curren
 
 ### Istio
 
-[![Conformance](https://img.shields.io/badge/Gateway%20API%20Conformance%20v1.2.1-Istio-green)](https://github.com/kubernetes-sigs/gateway-api/blob/main/conformance/reports/v1.2.1/istio-istio)
+[![Conformance](https://img.shields.io/badge/Gateway%20API%20Conformance%20v1.4.0-Istio-green)](https://github.com/kubernetes-sigs/gateway-api/blob/main/conformance/reports/v1.4.0/istio-istio)
 
 [Istio][istio] is an open source [service mesh][istio-mesh] and gateway implementation.
 
@@ -456,7 +456,7 @@ Check out the [Gateway API task][istio-2] for more information about the Gateway
 [istio-2]:https://istio.io/latest/docs/tasks/traffic-management/ingress/gateway-api/
 
 ### kgateway
-[![Conformance](https://img.shields.io/badge/Gateway%20API%20Conformance%20v1.2.1-kgateway-green)](https://github.com/kubernetes-sigs/gateway-api/blob/main/conformance/reports/v1.2.1/kgateway)
+[![Conformance](https://img.shields.io/badge/Gateway%20API%20Conformance%20v1.4.0-kgateway-green)](https://github.com/kubernetes-sigs/gateway-api/blob/main/conformance/reports/v1.4.0/kgateway)
 
 The [kgateway] project is a feature-rich, Kubernetes-native ingress controller and next-generation API gateway.
 It is focused on maintaining a great HTTP experience, extending features for advanced routing in scenarios such as AI and MCP gateways, and interoperating with a service mesh such as Istio in both ambient and sidecar modes.
@@ -600,17 +600,17 @@ STUNner currently supports version `v1alpha2` of the Gateway API specification. 
 
 ### Traefik Proxy
 
-[![Conformance](https://img.shields.io/badge/Gateway%20API%20Conformance%20v1.3.0-Traefik Proxy-green)](https://github.com/kubernetes-sigs/gateway-api/blob/main/conformance/reports/v1.3.0/traefik-traefik)
+[![Conformance](https://img.shields.io/badge/Gateway%20API%20Conformance%20v1.4.0-Traefik Proxy-green)](https://github.com/kubernetes-sigs/gateway-api/blob/main/conformance/reports/v1.4.0/traefik-traefik)
 
 [Traefik Proxy][traefik-proxy] is an open source cloud-native application proxy.
 
-Traefik Proxy currently supports version `v1.3.0` of the Gateway API specification, check the [Kubernetes Gateway Provider Documentation][traefik-proxy-gateway-api-doc] for more information on how to deploy and use it.
+Traefik Proxy currently supports version `v1.4.0` of the Gateway API specification, check the [Kubernetes Gateway Provider Documentation][traefik-proxy-gateway-api-doc] for more information on how to deploy and use it.
 Traefik Proxy's implementation passes all HTTP core and some extended conformance tests, like GRPCRoute, but also supports TCPRoute and TLSRoute features from the Experimental channel.
 
 For help and support with Traefik Proxy, [create an issue][traefik-proxy-issue-new] or ask for help in the [Traefik Labs Community Forum][traefiklabs-community-forum].
 
 [traefik-proxy]:https://traefik.io
-[traefik-proxy-gateway-api-doc]:https://doc.traefik.io/traefik/v3.2/routing/providers/kubernetes-gateway/
+[traefik-proxy-gateway-api-doc]:https://doc.traefik.io/traefik/v3.6/reference/install-configuration/providers/kubernetes/kubernetes-gateway
 [traefik-proxy-issue-new]:https://github.com/traefik/traefik/issues/new/choose
 [traefiklabs-community-forum]:https://community.traefik.io/c/traefik/traefik-v3/21
 
@@ -740,7 +740,7 @@ Page review timeline, starting with the v1.3 Page Review:
   any implementations that are are still Stale (after a right-of-reply period).
 * Gateway API v1.5 release Page Review (at least one month after the actual
   release): We will remove the Stale category, and implementation maintainers
-  will need to be at least partially conformant on each review, or during the 
+  will need to be at least partially conformant on each review, or during the
   right-of-reply period, or be removed from the implementations page.
 
 This means that, after the Gateway API v1.5 release, implementations cannot be
