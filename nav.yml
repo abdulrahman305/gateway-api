@@ -24,19 +24,25 @@ nav:
     - FAQ: faq.md
     - Glossary: concepts/glossary.md
   - Guides:
+    - Getting Started:
+      - Introduction: guides/getting-started/index.md
+      - Deploying a simple Gateway: guides/getting-started/simple-gateway.md
+      - Migrating from Ingress: guides/getting-started/migrating-from-ingress.md
+      - Migrating from Ingress-NGINX: guides/getting-started/migrating-from-ingress-nginx.md
     - User Guides:
-      - Getting started: guides/index.md
-      - Simple Gateway: guides/simple-gateway.md
       - HTTP routing: guides/http-routing.md
       - HTTP redirects and rewrites: guides/http-redirect-rewrite.md
       - HTTP header modifier: guides/http-header-modifier.md
       - HTTP traffic splitting: guides/traffic-splitting.md
       - HTTP request mirroring: guides/http-request-mirroring.md
+      - HTTP query parameter matching: guides/http-query-param-matching.md
+      - HTTP method matching: guides/http-method-matching.md
+      - HTTP timeouts: guides/http-timeouts.md
+      - HTTP CORS: guides/http-cors.md
       - Cross-Namespace routing: guides/multiple-ns.md
       - TLS: guides/tls.md
       - TCP routing: guides/tcp.md
       - gRPC Routing: guides/grpc-routing.md
-      - Migrating from Ingress: guides/migrating-from-ingress.md
       - Backend Protocol Selection: guides/backend-protocol.md
       - Infrastructure attributes: guides/infrastructure.md
     - API Design: guides/api-design.md
